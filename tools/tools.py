@@ -183,7 +183,7 @@ def get_ip_info(ip=None):
 
 
 def os_bash(cmd):
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, encoding=file_encoding, errors='ignore')
     if result.returncode != 0:
         return result.stderr
     return result.stdout
