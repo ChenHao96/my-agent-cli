@@ -56,7 +56,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "file_create",
-            "description": "Create a file in the specified file system directory",
+            "description": "Create a empty file in the specified file system directory",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -75,7 +75,7 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "filepath": {"type": "string", "description": "Complete file filepath"},
+                    "filepath": {"type": "string", "description": "Complete file system path"},
                     "content": {"type": "string", "description": "Content to be written"},
                 },
                 "required": ["filepath", "content"]
@@ -86,12 +86,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "file_write",
-            "description": "Create and write to the file when the specified filepath does not exist",
+            "description": "When the specified file path does not exist, create a file and write content into it, or choose to overwrite the content in the file",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "filepath": {"type": "string", "description": "Complete file filepath"},
+                    "filepath": {"type": "string", "description": "Complete file system path"},
                     "content": {"type": "string", "description": "Content to be written"},
+                    "overwrite": {"type": "bool", 'default':False, "description": "Is it mandatory to overwrite"},
                 },
                 "required": ["filepath", "content"]
             }
@@ -105,7 +106,7 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "filepath": {"type": "string", "description": "Complete file filepath"}
+                    "filepath": {"type": "string", "description": "Complete file system path"}
                 },
                 "required": ["filepath"]
             }
@@ -119,7 +120,7 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "filepath": {"type": "string", "description": "Complete file filepath"},
+                    "filepath": {"type": "string", "description": "Complete file system path"},
                     "startline": {"type": "number", "description": "The starting line number or single line number read. Undefined reading all"},
                     "endline": {"type": "number", "description": "The end row number read must be greater than the start row number"}
                 },
@@ -146,6 +147,20 @@ tools = [
             "name": "get_ip",
             "description": "Get the current network IP",
             "parameters": {"type": "object", "properties": {}}
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "dir_create",
+            "description": "Create a folder in the specified path",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Complete file system new folder path"},
+                },
+                "required": ["path"]
+            }
         }
     }
 ]
@@ -183,7 +198,8 @@ def get_ip_info(ip=None):
 
 
 def os_bash(cmd):
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, encoding=file_encoding, errors='ignore')
+    result = subprocess.run(cmd, shell=True, capture_output=True,
+                            text=True, encoding=file_encoding, errors='ignore')
     if result.returncode != 0:
         return result.stderr
     return result.stdout
@@ -209,7 +225,7 @@ def file_create(path, filename):
     file_path = Path(path) / filename
     if file_path.exists():
         return 'Error: The File Exists'
-    file_path.parent.mkdir(parents=True)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.touch()
     return 'ok'
 
@@ -231,10 +247,11 @@ def file_read(filepath):
     return json.dumps({'msg': 'ok', 'content': content})
 
 
-def file_write(filepath, content):
+def file_write(filepath, content, overwrite:False):
     file_path = Path(filepath)
     if file_path.exists():
-        return "Error: The File Exists"
+        if not overwrite:
+            return "Error: The File Exists"
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_text(content, encoding=file_encoding)
     return 'ok'
@@ -268,6 +285,23 @@ def file_read_lines(filepath, startline=None, endline=None):
     return json.dumps({'msg': 'ok', 'content': content})
 
 
+def dir_create(path):
+    path = Path(path)
+    if not path.exists():
+        path.mkdir(parents=True, exist_ok=True)
+    return 'ok'
+
+
+def file_insert(filepath, line, content):
+    pass
+
+def file_update_lines(filepath, array):
+    pass
+
+def file_delete_lines(filepath, array):
+    pass
+
+
 TOOL_CALL_MAP = {
     # 命令行
     "os_bash": os_bash,
@@ -281,12 +315,16 @@ TOOL_CALL_MAP = {
 
     # 目录操作
     "dir_ls": dir_ls,
+    "dir_create": dir_create,
     "dir_location": dir_location,
 
     # 文件操作
+    "file_read": file_read,
+    "file_write": file_write,
     "file_create": file_create,
     "file_append": file_append,
-    "file_write": file_write,
-    "file_read": file_read,
     "file_read_lines": file_read_lines,
+    "file_insert": file_insert,
+    "file_update_lines": file_update_lines,
+    "file_delete_lines": file_delete_lines,
 }

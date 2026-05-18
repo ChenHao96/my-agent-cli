@@ -58,12 +58,20 @@ def run(messages):
             match choice.finish_reason:
                 case "tool_calls":
                     for _, tool in enumerate(messageObj.tool_calls):
+                        # if tool.function.name == "os_bash":
+
+                        #     # TODO：开启一个新的请求来判断用户是否允许执行
+                        #     # 1. 本次操作
+                        #     # 2. 当前会话
+                        #     # 3. 其他
+
+                        #     break
                         tool_function = TOOL_CALL_MAP[tool.function.name]
                         try:
                             tool_result = tool_function(
                                 **json.loads(tool.function.arguments))
                         except Exception as e:
-                            tool_result = f"error: {e}"
+                            tool_result = f"{tool.function.name}({tool.function.arguments}) error: {e}"
                             print(tool_result)
                         messages.append(
                             {"role": "tool", "tool_call_id": tool.id, "content": tool_result})
