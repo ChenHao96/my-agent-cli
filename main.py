@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from openai import OpenAI
 
-from tools import tools, TOOL_CALL_MAP
+from tools.tools import tools, TOOL_CALL_MAP
 
 reasoning_effort = "off"
 
