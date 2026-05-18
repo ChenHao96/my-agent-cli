@@ -11,15 +11,17 @@ file_path = Path("./system_prompt.md")
 if file_path.exists():
     SYSTEM_PROMPT = file_path.read_text(encoding = 'utf-8')
 
-USER_PROMPT = ""
-file_path = Path("./user_prompt.md")
-if file_path.exists():
-    USER_PROMPT = file_path.read_text(encoding = 'utf-8')
-USER_PROMPT += "/nHello/n"
+# USER_PROMPT = ""
+# file_path = Path("./user_prompt.md")
+# if file_path.exists():
+#     USER_PROMPT = file_path.read_text(encoding = 'utf-8')
+# USER_PROMPT += "/nHello/n"
 
 
-messages = [{"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": USER_PROMPT}]
+messages = [
+    {"role": "system", "content": SYSTEM_PROMPT},
+    # {"role": "user", "content": USER_PROMPT}
+]
 
 
 kwargs = {
@@ -71,8 +73,8 @@ def run(messages):
 
 
 while True:
-    run(messages)
-    print(messages[-1]['content'])
     content = input(">> ")
     messages.append({"role": "user", "content": content})
+    run(messages)
+    print(messages[-1]['content'])
     
