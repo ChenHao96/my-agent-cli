@@ -7,20 +7,19 @@ from tools.tools import tools, TOOL_CALL_MAP
 reasoning_effort = "off"
 
 SYSTEM_PROMPT = "You are a helpful assistant with access to various tools."
-file_path = Path("./system_prompt.md")
+file_path = Path(".agent/system_prompt.md")
 if file_path.exists():
     SYSTEM_PROMPT = file_path.read_text(encoding = 'utf-8')
 
 # USER_PROMPT = ""
-# file_path = Path("./user_prompt.md")
+# file_path = Path(".agent/user_prompt.md")
 # if file_path.exists():
 #     USER_PROMPT = file_path.read_text(encoding = 'utf-8')
 # USER_PROMPT += "/nHello/n"
 
 
 messages = [
-    {"role": "system", "content": SYSTEM_PROMPT},
-    # {"role": "user", "content": USER_PROMPT}
+    {"role": "system", "content": SYSTEM_PROMPT}
 ]
 
 
