@@ -14,7 +14,7 @@ if file_path.exists():
 # USER_PROMPT = ""
 # file_path = Path(".agent/user_prompt.md")
 # if file_path.exists():
-#     USER_PROMPT = file_path.read_text(encoding = 'utf-8')
+#     USER_PROMPT = file_path.read_text(encoding='utf-8')
 # USER_PROMPT += "/nHello/n"
 
 

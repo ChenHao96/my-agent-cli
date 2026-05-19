@@ -15,12 +15,12 @@ def dir_location():
     parameters={
         "type": "object",
         "properties": {
-            "path": {"type": "string", "description": "Complete file system path"},
+            "path": {"type": "string", "description": "File path; example: '.', '/home/user', 'C:/User/user'"},
         },
         "required": ["path"]
     }
 )
-def dir_ls(path):
+def dir_ls(path: str):
     result = []
     for item in os.scandir(path):
         obj = {"filename": item.name, "type": "unkonw"}
@@ -37,11 +37,11 @@ def dir_ls(path):
     parameters={
         "type": "object",
         "properties": {
-            "path": {"type": "string", "description": "Complete file system folder path"},
+            "path": {"type": "string", "description": "Folder path; example: './foldername', '/home/user/foldername', 'C:/User/user/foldername'"},
         },
         "required": ["path"]
     }
 )
-def dir_create(path):
+def dir_create(path: str):
     Path(path).mkdir(parents=True, exist_ok=True)
     return "ok"

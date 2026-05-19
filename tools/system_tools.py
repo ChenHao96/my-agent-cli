@@ -24,7 +24,7 @@ def get_time():
         "required": ["cmd"]
     }
 )
-def os_bash(cmd):
+def os_bash(cmd: str):
     result = subprocess.run(cmd, shell=True, capture_output=True,
                             text=True, encoding="utf-8", errors="ignore")
     if result.returncode != 0:

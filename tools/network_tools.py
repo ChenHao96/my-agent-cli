@@ -18,11 +18,11 @@ def get_ip():
     parameters={
         "type": "object",
         "properties": {
-            "ip": {"type": "string", "description": "IPv4 IP address; return location information if not defined"}
+            "ip": {"type": ["string", 'null'], "description": "IPv4 IP address; return location information if not defined"}
         }
     }
 )
-def get_ip_info(ip=None):
+def get_ip_info(ip: str = None):
     if ip is None:
         url = "https://ipapi.co/json/"
     else:

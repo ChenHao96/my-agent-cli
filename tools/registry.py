@@ -12,7 +12,7 @@ def tool(name=None, description="", parameters=None):
                 "function": {
                     "name": name,
                     "description": description,
-                    "parameters": parameters or {"type": "object"}
+                    "parameters": parameters or {"type": "object", "properties": {}}
                 }
             },
             "fn": fn

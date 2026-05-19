@@ -1,25 +1,9 @@
 import json
-import chardet
 from pathlib import Path
 
 from .registry import tool
 
-
-# @tool(
-#     description="Create empty file under the specified file system path, and call it when the file has no content",
-#     parameters={
-#         "type": "object",
-#         "properties": {
-#             "filepath": {"type": "string", "description": "Include the file path and filename; example: '..../test.txt'"}
-#         },
-#         "required": ["filepath"]
-#     }
-# )
-# def file_create(filepath):
-#     file_path = Path(filepath)
-#     file_path.parent.mkdir(parents=True)
-#     file_path.touch()
-#     return "ok"
+enc_default = 'utf-8'
 
 
 @tool(
@@ -32,14 +16,11 @@ from .registry import tool
         "required": ["filepath"]
     }
 )
-def file_read(filepath):
+def file_read(filepath: str):
     file_path = Path(filepath)
     if not file_path.exists():
         return json.dumps({"msg": "Error: The File Not Exists"})
-    with open(filepath, 'rb') as f:
-        raw = f.read()
-    enc = chardet.detect(raw)['encoding']
-    content = file_path.read_text(encoding=enc)
+    content = file_path.read_text(encoding=enc_default)
     return json.dumps({"msg": "ok", "content": content})
 
 
@@ -55,13 +36,13 @@ def file_read(filepath):
         "required": ["filepath", "content"]
     }
 )
-def file_write(filepath, content, overwrite=None):
+def file_write(filepath: str, content: str, overwrite: bool = None):
     file_path = Path(filepath)
     if file_path.exists():
         if overwrite is None or overwrite == False:
             return "Error: The File Exists"
     file_path.parent.mkdir(parents=True, exist_ok=True)
-    file_path.write_text(content)
+    file_path.write_text(content, encoding=enc_default)
     return "ok"
 
 
@@ -76,49 +57,120 @@ def file_write(filepath, content, overwrite=None):
         "required": ["filepath", "content"]
     }
 )
-def file_append(filepath, content):
+def file_append(filepath: str, content: str):
     file_path = Path(filepath)
     if not file_path.exists():
         return "Error: The File Not Exists"
-    with file_path.open("a") as f:
+    with file_path.open("a", encoding=enc_default) as f:
         f.write(content)
     return "ok"
 
 
-# @tool(
-#     description="Read the content of the file from the specified filepath from the start line to the end line, and return an array where each line of content serves as an array element",
-#     parameters={
-#         "type": "object",
-#         "properties": {
-#             "filepath": {"type": "string", "description": "Include the file path and filename; example: '..../test.txt'"},
-#             "startline": {"type": ["integer",'null'], "minimum": 0, "description": "The starting line number or single line number read. Undefined reading all"},
-#             "endline": {"type": ["integer",'null'], "minimum": 0, "description": "The end row number read must be greater than the start row number"}
-#         },
-#         "required": ["filepath"]
-#     }
-# )
-# def file_read_lines(filepath, startline=None, endline=None):
-#     file_path = Path(filepath)
-#     if not file_path.exists():
-#         return json.dumps({"msg": "Error: The File Not Exists"})
+@tool(
+    description="""Modify the content of a file line from the specified file path, including inserte lines, append lines, delete lines, and update lines
+    example 1: delete lines
+        filepath: '..../test.txt'
+        items: [{'type':'delete','index':2},{'type':'delete','index':3},{'type':'delete','index':5}]
+    example 2: update lines
+        filepath: '..../test.txt'
+        items: [{'type':'update','index':2,'content','update content....'}]
+    example 3: insert/append lines
+        filepath: '..../test.txt'
+        items: [{'type':'insert','index':2,'content','content....'},{'type':'append','index':2,'content','content....'}]
+    """,
+    parameters={
+        "type": "object",
+        "properties": {
+            "filepath": {"type": "string", "description": "Include the file path and filename; example: '..../test.txt'"},
+            "items": {
+                "type": "array",
+                "description": "The modified lines",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "index": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "description": "The line number; The first row is represented by 0"
+                        },
+                        "type": {
+                            "type": "string",
+                            "enum": ["delete", "insert", "append", "update"],
+                            "description": """Modify type. 
+                                insert: It will write content before the specified line number
+                                append: It will write content after the specified line number
+                                delete: Delete row the specified line number
+                                update: Update row content the specified line number
+                            """
+                        },
+                        "content": {
+                            "type": ["string", "null"],
+                            "description": "Line content; When type is 'delete', it can be null"
+                        }
+                    },
+                    "required": ["index", "type"]
+                }
+            },
+        },
+        "required": ["filepath", "items"]
+    }
+)
+def file_modify_lines(filepath: str, items: list):
 
-#     content = []
-#     if startline is not None:
-#         if endline is not None:
-#             if endline < startline:
-#                 return json.dumps({"msg": "Fail Arg: endline < startline"})
-#         else:
-#             endline = startline
+    if len(items) <= 0:
+        return "no changed"
 
-#         with open(file_path, "r", encoding=FILE_ENCODING) as f:
-#             for current_num, line in enumerate(f, 1):
-#                 if startline <= current_num <= endline:
-#                     content.append(line.strip())
-#                 elif current_num > endline:
-#                     break
-#     else:
-#         with open(file_path, "r", encoding=FILE_ENCODING) as f:
-#             for line in f:
-#                 content.append(line)
+    file_path = Path(filepath)
+    if not file_path.exists():
+        return "Error: The File Not Exists"
 
-#     return json.dumps({"msg": "ok", "content": content})
+    contents = []
+    with open(filepath, "r", encoding=enc_default) as f:
+        contents = f.readlines()
+
+    dels = []
+    inserts = []
+    for item in items:
+        index = item.get('index', -1)
+        text = item.get('content', '')
+
+        if index < 0:
+            continue
+
+        match item['type']:
+            case 'delete':
+                dels.append(index)
+                break
+            case 'insert':
+                inserts.append({'index': index, 'content': text})
+                break
+            case 'append':
+                inserts.append({'index': index + 1, 'content': text})
+                break
+            case 'update':
+                if not text.endswith('\n'):
+                    text += '\n'
+                contents[index] = text
+                break
+
+    # TODO: 混合修改时存在问题
+
+    if len(dels) > 0:
+        for idx in sorted(dels, reverse=True):
+            del contents[idx]
+
+    if len(inserts) > 0:
+        inserts = sorted(inserts, key=lambda x: x['index'], reverse=True)
+        for item in inserts:
+            new = item['content']
+            if not new.endswith('\n'):
+                new += '\n'
+            contents.insert(item['index'], new)
+
+    with open(filepath, "w", encoding=enc_default) as f:
+        for content in contents:
+            if not content.endswith('\n'):
+                content += '\n'
+            f.write(content)
+
+    return 'ok'
