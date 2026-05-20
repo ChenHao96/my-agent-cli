@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from .registry import tool
+from .registry import tool, check_path_safe
 
 enc_default = 'utf-8'
 
@@ -38,6 +38,8 @@ def file_read(filepath: str):
 )
 def file_write(filepath: str, content: str, overwrite: bool = None):
     file_path = Path(filepath)
+    if not check_path_safe(file_path):
+        return "Error: The FilePath Out of safe range, user confirmation is required"
     if file_path.exists():
         if overwrite is None or overwrite == False:
             return "Error: The File Exists"
@@ -64,6 +66,12 @@ def file_append(filepath: str, content: str):
     with file_path.open("a", encoding=enc_default) as f:
         f.write(content)
     return "ok"
+
+
+def line_text(text: str):
+    if not text.endswith('\n'):
+        text += '\n'
+    return text
 
 
 @tool(
@@ -118,7 +126,7 @@ def file_append(filepath: str, content: str):
 def file_modify_lines(filepath: str, items: list):
 
     if len(items) <= 0:
-        return "no changed"
+        return "Warring: Items Empty"
 
     file_path = Path(filepath)
     if not file_path.exists():
@@ -126,9 +134,9 @@ def file_modify_lines(filepath: str, items: list):
 
     contents = []
     with open(filepath, "r", encoding=enc_default) as f:
-        contents = f.readlines()
+        for line in f:
+            contents.append({'type': 'text', 'content': line_text(line)})
 
-    dels = []
     inserts = []
     for item in items:
         index = item.get('index', -1)
@@ -139,38 +147,24 @@ def file_modify_lines(filepath: str, items: list):
 
         match item['type']:
             case 'delete':
-                dels.append(index)
-                break
+                contents[index]['type'] = 'delete'
             case 'insert':
                 inserts.append({'index': index, 'content': text})
-                break
             case 'append':
                 inserts.append({'index': index + 1, 'content': text})
-                break
             case 'update':
-                if not text.endswith('\n'):
-                    text += '\n'
-                contents[index] = text
-                break
-
-    # TODO: 混合修改时存在问题
-
-    if len(dels) > 0:
-        for idx in sorted(dels, reverse=True):
-            del contents[idx]
+                contents[index]['content'] = line_text(text)
 
     if len(inserts) > 0:
         inserts = sorted(inserts, key=lambda x: x['index'], reverse=True)
         for item in inserts:
-            new = item['content']
-            if not new.endswith('\n'):
-                new += '\n'
-            contents.insert(item['index'], new)
+            contents.insert(
+                item['index'], {'type': 'text', 'content': line_text(item['content'])})
 
     with open(filepath, "w", encoding=enc_default) as f:
-        for content in contents:
-            if not content.endswith('\n'):
-                content += '\n'
-            f.write(content)
+        for item in contents:
+            if item['type'] == 'delete':
+                continue
+            f.write(line_text(item['content']))
 
     return 'ok'

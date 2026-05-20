@@ -2,7 +2,7 @@ import json
 import os
 from pathlib import Path
 
-from .registry import tool
+from .registry import tool, check_path_safe
 
 
 @tool(description="Get the current directory location")
@@ -43,5 +43,8 @@ def dir_ls(path: str):
     }
 )
 def dir_create(path: str):
-    Path(path).mkdir(parents=True, exist_ok=True)
+    dir_path = Path(path)
+    if not check_path_safe(dir_path):
+        return "Error: The FilePath Out of safe range, user confirmation is required"
+    dir_path.mkdir(parents=True, exist_ok=True)
     return "ok"

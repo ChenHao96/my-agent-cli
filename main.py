@@ -51,11 +51,11 @@ def is_empty_or_whitespace(s: str) -> bool:
 
 
 def append_assistant_message(messageObj):
-    msg = {'role': 'assistant'}
+    msg = {'role': 'assistant', 'content': messageObj.content.strip()}
     if len(messageObj.content) > 0:
         msg.update({'tool_calls': messageObj.tool_calls})
-    if not is_empty_or_whitespace(messageObj.content):
-        msg.update({'content': messageObj.content.strip()})
+    # if not is_empty_or_whitespace(messageObj.content):
+    #     msg.update({'content': messageObj.content.strip()})
     if not is_empty_or_whitespace(messageObj.reasoning_content):
         msg.update({'reasoning_content': messageObj.reasoning_content.strip()})
     messages.append(msg)
@@ -68,6 +68,8 @@ def run(messages):
     total_tokens = 0
 
     while True:
+        # TODO: 移除失败的调用来压缩上下文
+        
         response = client.chat.completions.create(**kwargs)
         total_tokens += response.usage.total_tokens
         prompt_tokens += response.usage.prompt_tokens
@@ -82,13 +84,6 @@ def run(messages):
             match choice.finish_reason:
                 case "tool_calls":
                     for _, tool in enumerate(messageObj.tool_calls):
-                        # if tool.function.name == "os_bash":
-                        #     # TODO：开启一个新的请求来判断用户是否允许执行
-                        #     # 1. 本次操作
-                        #     # 2. 当前会话
-                        #     # 3. 其他
-                        #     break
-
                         tool_function = get_tool_call_map(tool.function.name)
                         try:
                             tool_result = tool_function(
@@ -98,7 +93,6 @@ def run(messages):
                             print(f"\033[31m{tool_result}\033[0m")
                         messages.append(
                             {"role": "tool", "tool_call_id": tool.id, "content": tool_result})
-                    break
                 case "stop":
                     print(
                         f"\033[33m >> prompt:{prompt_tokens}, completion:{completion_tokens}, total:{total_tokens}\033[0m")

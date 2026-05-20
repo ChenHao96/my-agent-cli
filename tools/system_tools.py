@@ -1,7 +1,7 @@
 import subprocess
 from datetime import datetime
 
-from .registry import tool
+from .registry import tool, check_bash_safe
 
 
 @tool(description="Get the current date")
@@ -25,6 +25,8 @@ def get_time():
     }
 )
 def os_bash(cmd: str):
+    if not check_bash_safe(cmd):
+        return "Error: The command Out of safe range, user confirmation is required"
     result = subprocess.run(cmd, shell=True, capture_output=True,
                             text=True, encoding="utf-8", errors="ignore")
     if result.returncode != 0:
