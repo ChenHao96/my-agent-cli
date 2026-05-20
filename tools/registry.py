@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 TOOL_REGISTRY = {}
@@ -34,9 +35,21 @@ def get_tool_call_map(name: str = None):
     return {name: entry["fn"] for name, entry in TOOL_REGISTRY.items()}
 
 
-def check_path_safe(path: Path):
-    # TODO: 需要判断地址是否符合要求
-    return True
+def get_current_work_path():
+    # TODO: 返回用户选择的工作目录
+    # 默认返回当前目录
+    return os.getcwd()
+
+
+def check_path_safe(path: str):
+    safe_path = Path(get_current_work_path())
+    if path.is_relative_to(safe_path):
+        return True
+    else:
+        # TODO: 判断地址是否安全授权过
+        pass
+    return False
+
 
 def check_bash_safe(cmd):
     # TODO: 判断命令是否可以执行

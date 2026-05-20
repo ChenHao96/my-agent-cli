@@ -2,12 +2,12 @@ import json
 import os
 from pathlib import Path
 
-from .registry import tool, check_path_safe
+from .registry import tool, check_path_safe, get_current_work_path
 
 
 @tool(description="Get the current directory location")
 def dir_location():
-    return os.getcwd()
+    return get_current_work_path()
 
 
 @tool(
