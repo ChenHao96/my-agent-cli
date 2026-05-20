@@ -51,11 +51,11 @@ def is_empty_or_whitespace(s: str) -> bool:
 
 
 def append_assistant_message(messageObj):
-    msg = {'role': 'assistant', 'content': messageObj.content.strip()}
+    msg = {'role': 'assistant', 'content': ''}
     if len(messageObj.content) > 0:
         msg.update({'tool_calls': messageObj.tool_calls})
-    # if not is_empty_or_whitespace(messageObj.content):
-    #     msg.update({'content': messageObj.content.strip()})
+    if not is_empty_or_whitespace(messageObj.content):
+        msg.update({'content': messageObj.content.strip()})
     if not is_empty_or_whitespace(messageObj.reasoning_content):
         msg.update({'reasoning_content': messageObj.reasoning_content.strip()})
     messages.append(msg)

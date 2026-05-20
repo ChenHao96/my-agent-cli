@@ -39,7 +39,7 @@ def file_read(filepath: str):
 def file_write(filepath: str, content: str, overwrite: bool = None):
     file_path = Path(filepath)
     if not check_path_safe(file_path):
-        return "Error: The FilePath Out of safe range, user confirmation is required"
+        return f"Error: The FilePath('{file_path.resolve()}') Out of safe range, user confirmation is required"
     if file_path.exists():
         if overwrite is None or overwrite == False:
             return "Error: The File Exists"
@@ -75,7 +75,8 @@ def line_text(text: str):
 
 
 @tool(
-    description="""Modify the content of a file line from the specified file path, including inserte lines, append lines, delete lines, and update lines
+    description="""Modify the line content of files in the specified file path, including insert lines, append lines, delete lines, and update lines; 
+    Modifications can only be made line by line, and the 'content' must not contain multiple lines of text
     example 1: delete lines
         filepath: '..../test.txt'
         items: [{'type':'delete','index':2},{'type':'delete','index':3},{'type':'delete','index':5}]
@@ -147,13 +148,13 @@ def file_modify_lines(filepath: str, items: list):
 
         match item['type']:
             case 'delete':
-                contents[index]['type'] = 'delete'
+                contents[index].update({'type':'delete'})
             case 'insert':
                 inserts.append({'index': index, 'content': text})
             case 'append':
                 inserts.append({'index': index + 1, 'content': text})
             case 'update':
-                contents[index]['content'] = line_text(text)
+                contents[index].update({'content':line_text(text)})
 
     if len(inserts) > 0:
         inserts = sorted(inserts, key=lambda x: x['index'], reverse=True)

@@ -38,12 +38,12 @@ def get_tool_call_map(name: str = None):
 def get_current_work_path():
     # TODO: 返回用户选择的工作目录
     # 默认返回当前目录
-    return os.getcwd()
+    return os.getcwd() + "/test"
 
 
-def check_path_safe(path: str):
+def check_path_safe(path: Path):
     safe_path = Path(get_current_work_path())
-    if path.is_relative_to(safe_path):
+    if path.resolve().is_relative_to(safe_path):
         return True
     else:
         # TODO: 判断地址是否安全授权过

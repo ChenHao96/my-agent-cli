@@ -45,6 +45,6 @@ def dir_ls(path: str):
 def dir_create(path: str):
     dir_path = Path(path)
     if not check_path_safe(dir_path):
-        return "Error: The FilePath Out of safe range, user confirmation is required"
+        return f"Error: The DirPath('{dir_path.resolve()}') Out of safe range, user confirmation is required"
     dir_path.mkdir(parents=True, exist_ok=True)
     return "ok"
