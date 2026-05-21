@@ -3,6 +3,7 @@ from pathlib import Path
 from openai import OpenAI
 
 from tools import get_tools, get_tool_call_map
+from tools.dir_tools import dir_location
 
 reasoning_effort = "off"
 
@@ -21,12 +22,23 @@ if file_path.exists():
 messages = [
     {"role": "system", "content": SYSTEM_PROMPT}
 ]
+workPath = dir_location()
+messages.append({"role": "tool", "tool_call_id": "dir_location", "content": workPath})
+
+# TODO: 向用户确认当前工作目录是否可信
+# agent_path = Path(workPath) + "/.agent/.agent.json"
+# if not agent_path.exists():
+#     jsonContent = "{}"
+#     agent_path.parent.mkdir(parents=True, exist_ok=True)
+#     agent_path.write_text(jsonContent, encoding='utf-8')
+# else:
+#     pass
 
 
 kwargs = {
     "stream": False,
     "messages": messages,
-    "model": "qwen/qwen3.5-9b",
+    "model": "Qwen3.6-35B-A3B-Q4_K_M.gguf",
     "extra_body": {"thinking": {"type": "disable"}}
 }
 
@@ -37,11 +49,11 @@ if len(_tools) > 0:
 
 if reasoning_effort != "off":
     kwargs['reasoning_effort'] = reasoning_effort
-    kwargs['extra_body'] = {"thinking": {"type": "enable"}}
+    kwargs['extra_body'] = {"enable_thinking": False}
 
 
 client = OpenAI(
-    api_key="llm-studio",
+    api_key="llama-cpp",
     base_url="http://localhost/v1",
 )
 
@@ -52,29 +64,22 @@ def is_empty_or_whitespace(s: str) -> bool:
 
 def append_assistant_message(messageObj):
     msg = {'role': 'assistant', 'content': ''}
-    if len(messageObj.content) > 0:
-        msg.update({'tool_calls': messageObj.tool_calls})
     if not is_empty_or_whitespace(messageObj.content):
         msg.update({'content': messageObj.content.strip()})
-    if not is_empty_or_whitespace(messageObj.reasoning_content):
-        msg.update({'reasoning_content': messageObj.reasoning_content.strip()})
+    if messageObj.tool_calls and len(messageObj.tool_calls) > 0:
+        msg.update({'tool_calls': messageObj.tool_calls})
+    if hasattr(messageObj, 'reasoning_content'):
+        if not is_empty_or_whitespace(messageObj.reasoning_content):
+            msg.update(
+                {'reasoning_content': messageObj.reasoning_content.strip()})
     messages.append(msg)
 
 
 def run(messages):
-
-    completion_tokens = 0
-    prompt_tokens = 0
-    total_tokens = 0
-
     while True:
         # TODO: 移除失败的调用来压缩上下文
-        
-        response = client.chat.completions.create(**kwargs)
-        total_tokens += response.usage.total_tokens
-        prompt_tokens += response.usage.prompt_tokens
-        completion_tokens += response.usage.completion_tokens
 
+        response = client.chat.completions.create(**kwargs)
         print(
             f"\033[36m{response.model_dump_json(indent=2, ensure_ascii=False)}\033[0m")
 
@@ -95,7 +100,7 @@ def run(messages):
                             {"role": "tool", "tool_call_id": tool.id, "content": tool_result})
                 case "stop":
                     print(
-                        f"\033[33m >> prompt:{prompt_tokens}, completion:{completion_tokens}, total:{total_tokens}\033[0m")
+                        f"\033[33m >> prompt:{response.usage.prompt_tokens}, completion:{response.usage.completion_tokens}, total:{response.usage.total_tokens}\033[0m")
                     return
 
 
@@ -103,5 +108,7 @@ while True:
     content = input(">> ")
     messages.append({"role": "user", "content": content})
     run(messages)
-    print(f"\033[33m >> {messages[-1]['reasoning_content']}\033[0m")
-    print(messages[-1]['content'])
+    reasoning_content = messages[-1].get('reasoning_content', '')
+    if not is_empty_or_whitespace(reasoning_content):
+        print(f"\033[33m >> {reasoning_content}\033[0m")
+    print(messages[-1].get('content', ''))

@@ -5,7 +5,7 @@ from pathlib import Path
 from .registry import tool, check_path_safe, get_current_work_path
 
 
-@tool(description="Get the current directory location")
+@tool(description="Get the current work directory location")
 def dir_location():
     return get_current_work_path()
 
@@ -15,7 +15,7 @@ def dir_location():
     parameters={
         "type": "object",
         "properties": {
-            "path": {"type": "string", "description": "File path; example: '.', '/home/user', 'C:/User/user'"},
+            "path": {"type": "string", "description": "File path; example: '/home/user', 'C:/User/user'"},
         },
         "required": ["path"]
     }
@@ -37,7 +37,7 @@ def dir_ls(path: str):
     parameters={
         "type": "object",
         "properties": {
-            "path": {"type": "string", "description": "Folder path; example: './foldername', '/home/user/foldername', 'C:/User/user/foldername'"},
+            "path": {"type": "string", "description": "Folder path; example: '/home/user/foldername', 'C:/User/user/foldername'"},
         },
         "required": ["path"]
     }

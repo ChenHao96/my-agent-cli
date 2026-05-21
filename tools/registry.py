@@ -41,16 +41,25 @@ def get_current_work_path():
     return os.getcwd() + "/test"
 
 
+safe_path_set = set()
 def check_path_safe(path: Path):
     safe_path = Path(get_current_work_path())
-    if path.resolve().is_relative_to(safe_path):
+    resolve_path = path.resolve()
+    if resolve_path.is_relative_to(safe_path):
         return True
     else:
+        if resolve_path in safe_path_set:
+            return True
         # TODO: 判断地址是否安全授权过
         pass
     return False
 
 
+safe_cmd_set = set()
 def check_bash_safe(cmd):
-    # TODO: 判断命令是否可以执行
-    return True
+    if cmd in safe_cmd_set:
+        return True
+    else:
+        # TODO: 判断命令是否可以执行
+        pass
+    return False

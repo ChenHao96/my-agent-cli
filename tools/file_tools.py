@@ -11,7 +11,7 @@ enc_default = 'utf-8'
     parameters={
         "type": "object",
         "properties": {
-            "filepath": {"type": "string", "description": "Include the file path and filename; example: '..../test.txt'"}
+            "filepath": {"type": "string", "description": "Include the file path and filename; example: '/home/user/test.txt', 'C:/User/user/test.txt'"}
         },
         "required": ["filepath"]
     }
@@ -30,7 +30,7 @@ def file_read(filepath: str):
         "type": "object",
         "properties": {
             "content": {"type": "string", "description": "Content to be written"},
-            "filepath": {"type": "string", "description": "Include the file path and filename; example: '..../test.txt'"},
+            "filepath": {"type": "string", "description": "Include the file path and filename; example: '/home/user/test.txt', 'C:/User/user/test.txt'"},
             "overwrite": {"type": ["boolean", 'null'], "description": "Is it mandatory to overwrite"}
         },
         "required": ["filepath", "content"]
@@ -53,7 +53,7 @@ def file_write(filepath: str, content: str, overwrite: bool = None):
     parameters={
         "type": "object",
         "properties": {
-            "filepath": {"type": "string", "description": "Include the file path and filename; example: '..../test.txt'"},
+            "filepath": {"type": "string", "description": "Include the file path and filename; example: '/home/user/test.txt', 'C:/User/user/test.txt'"},
             "content": {"type": "string", "description": "Content to be written"},
         },
         "required": ["filepath", "content"]
@@ -90,7 +90,7 @@ def line_text(text: str):
     parameters={
         "type": "object",
         "properties": {
-            "filepath": {"type": "string", "description": "Include the file path and filename; example: '..../test.txt'"},
+            "filepath": {"type": "string", "description": "Include the file path and filename; example: '/home/user/test.txt', 'C:/User/user/test.txt'"},
             "items": {
                 "type": "array",
                 "description": "The modified lines",

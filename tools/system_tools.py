@@ -14,12 +14,17 @@ def get_time():
     return datetime.now().strftime("%H:%M:%S")
 
 
+@tool(description="Get the current date and time")
+def get_datetime():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
 @tool(
     description="Execute command line commands on this machine",
     parameters={
         "type": "object",
         "properties": {
-            "cmd": {"type": "string", "description": "Executable commands compatible with the current system"}
+            "cmd": {"type": "string", "description": "Executable commands compatible with the current system; Like Windows:'findstr', Linux/Mac:'grep'"}
         },
         "required": ["cmd"]
     }
